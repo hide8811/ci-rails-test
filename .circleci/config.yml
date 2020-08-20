@@ -1,0 +1,33 @@
+version: 2
+
+jobs:
+  test:
+    docker:
+      - image: circleci/ruby:2.7.1-node-browsers-legacy
+        environment:
+          RAILS_ENV: test
+      - image: circleci/mysql:8.0.21
+        envronment:
+          MYSQL_ROOT_PASSWORD: $MYSQL_PASSWORD
+          MYSQL_DATABASE: myapp_test
+    working_directory: ~/repo
+    steps:
+      - checkout
+      - run:
+          name: bundle install
+          command: bundle install
+      - run:
+          name: データベースの起動を待機
+          command: dockerize -wait tcp://0.0.0.0:3306 -timeout 1m
+      - run:
+          name: データベースのセットアップ
+          command: bundle exec rails db:schema:load
+      - run:
+          name: テストの実行
+          command: bundle exec rspec
+
+workflows:
+  version: 2
+  workflows:
+    jobs:
+      - test
